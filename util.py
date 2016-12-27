@@ -42,6 +42,8 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
     :param distance_remaining_fn: func(pos, goal) -> estimated cost to finish
     :return:
     """
+    states_tried = 0
+
     if distance_remaining_fn is None:
         distance_remaining_fn = cartesian_distance
 
@@ -54,9 +56,17 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
     came_from = {start: None}
     cost_so_far = {start: 0}
 
+    timer = Timer()
+
     # Loop checking possibilities
     while not frontier.empty():
         _, current = frontier.get()
+
+        states_tried += 1
+        if timer.elapsed_secs() > 5:
+            timer.reset()
+            print "States tried: {}, Dist: {}".format(states_tried, distance_remaining_fn(current, goal))
+
         if current == goal:
             break
 

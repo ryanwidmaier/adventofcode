@@ -2,7 +2,7 @@ from pprint import pprint
 from datetime import datetime, timedelta
 
 registers = {
-    'a': 7,
+    'a': 12,
     'b': 0,
     'c': 0,
     'd': 0
@@ -15,20 +15,22 @@ def get_value(key):
     return int(key)
 
 
-def toggle(line):
-    tokens = instructions[pc].split()
-    cmd = tokens[0]
+def toggle(pc_, line):
+    tokens_ = line.split()
+    cmd = tokens_[0]
 
+    after = ''
     if cmd == 'inc':
-        return ' '.join(['dec'] + tokens[1:])
-    elif cmd == 'dec':
-        return ' '.join(['inc'] + tokens[1:])
+        after = ' '.join(['dec'] + tokens_[1:])
+    elif cmd in ('dec', 'tgl'):
+        after = ' '.join(['inc'] + tokens_[1:])
     elif cmd == 'jnz':
-        return ' '.join(['cpy'] + tokens[1:])
-    elif cmd in ('cpy', 'tgl'):
-        return ' '.join(['jnz'] + tokens[1:])
+        after = ' '.join(['cpy'] + tokens_[1:])
+    elif cmd in ('cpy',):
+        after = ' '.join(['jnz'] + tokens_[1:])
 
-    raise ValueError("Couldn't toggle {}".format(cmd))
+    print "Toggle {}: '{}' -> '{}'".format(pc_+1, line, after)
+    return after
 
 
 instructions = list([l.rstrip() for l in open('input.txt')])
@@ -37,6 +39,9 @@ pc = 0
 last = datetime.now()
 
 while pc < len(instructions):
+    line = instructions[pc]
+    line_pc = pc
+
     tokens = instructions[pc].split()
     cmd, arg1 = tokens[0], tokens[1]
 
@@ -52,21 +57,18 @@ while pc < len(instructions):
     elif cmd == 'tgl':
         pos = get_value(arg1) + pc
         if 0 <= pos < len(instructions):
-            instructions[pos] = toggle(instructions[pos])
+            instructions[pos] = toggle(pos, instructions[pos])
 
     if cmd == 'jnz' and get_value(arg1) != 0:
         # TODO should we allow reading from registers for param 2?
-        if tokens[2] not in 'abcd':
-            pc += int(tokens[2])
-        else:
-            pc += 1
+        pc += get_value(tokens[2])
     else:
         pc += 1
 
     if datetime.now() - last > timedelta(seconds=5):
         last = datetime.now()
-        print "PC: {}  INS: '{}'  A: {}  B: {}  C: {}  D: {}"\
-            .format(pc+1, instructions[pc], registers['a'], registers['b'], registers['c'], registers['d'])
+        print "PC: {:3d}  INS: '{:20s}'  A: {:10d}  B: {:10d}  C: {:10d}  D: {:10d}"\
+          .format(line_pc+1, line, registers['a'], registers['b'], registers['c'], registers['d'])
 
 
 pprint(registers)

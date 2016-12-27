@@ -1,5 +1,8 @@
-from Queue import PriorityQueue
-from itertools import chain, combinations
+from itertools import chain
+from util import a_star
+import itertools
+import copy
+
 
 input_data = """
 The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator,
@@ -9,9 +12,131 @@ The third floor contains nothing relevant.
 The fourth floor contains nothing relevant.
 """
 
+THULIUM = 1
+PROMENTHIUM = 2
+RUTHENIUM = 3
+COBALT = 4
+POLONIUM = 5
+ELERIUM = 6
+DILITHIUM = 7
+
+def GEN(element):
+    return -1 * element
+
+
+def MC(element):
+    return element
+
+
+def encode(elevator, floors_):
+    floors_ = [sorted(f_) for f_ in floors_]
+    floors_ = [[str(e) for e in f_] for f_ in floors_]
+    floors_ = [','.join(f_) for f_ in floors_]
+
+    return str(elevator) + '|' + ':'.join(floors_)
+
+
+def decode(state_):
+    elevator, _, floors_ = state_.partition('|')
+    floors_ = floors_.split(':')
+    floors_ = [f_.split(',') if f_ else [] for f_ in floors_]
+    floors_ = [[int(e) for e in f_] for f_ in floors_]
+
+    return int(elevator), floors_
+
+
+def is_valid(floor):
+    microchips = [m for m in floor if m > 0]
+    generators = [m for m in floor if m < 0]
+
+    # If there are no generators, all microchips are safe
+    if len(generators) == 0:
+        return True
+
+    # Generator present, so all microchips must be plugged into their generators
+    for m in microchips:
+        g = m * -1
+        if g not in generators:
+            return False
+
+        generators.remove(g)
+
+    return True
+
+
+def possible_moves(state_):
+    elevator, floors_ = decode(state_)
+
+    candidates = floors_[elevator]
+
+    # Try moving 2 items
+    for item1, item2 in itertools.combinations(candidates, 2):
+        # Floor without the element we are moving
+        new_floors = copy.deepcopy(floors_)
+        new_floors[elevator].remove(item1)
+        new_floors[elevator].remove(item2)
+
+        if not is_valid(new_floors[elevator]):
+            continue
+
+        # Try to move up
+        if elevator < len(floors_) - 1:
+            new_floors[elevator+1].append(item1)
+            new_floors[elevator+1].append(item2)
+
+            if is_valid(new_floors[elevator+1]):
+                yield encode(elevator+1, new_floors), 1
+
+            # Restore original floor
+            new_floors[elevator+1] = floors_[elevator+1]
+
+        # Try to move down
+        if elevator > 0:
+            new_floors[elevator-1].append(item1)
+            new_floors[elevator-1].append(item2)
+
+            if is_valid(new_floors[elevator-1]):
+                yield encode(elevator-1, new_floors), 1
+
+    for item in candidates:
+        # Floor without the element we are moving
+        new_floors = copy.deepcopy(floors_)
+        new_floors[elevator].remove(item)
+
+        # Will the floor we depart from be valid if we move this?
+        if not is_valid(new_floors[elevator]):
+            continue
+
+        # can we move the item up?
+        if elevator < len(floors_) - 1:
+            new_floors[elevator+1].append(item)
+            if is_valid(new_floors[elevator+1]):
+                yield encode(elevator+1, new_floors), 1
+
+            # Restore original floor
+            new_floors[elevator+1] = floors_[elevator+1]
+
+        # Can we move the item down?
+        if elevator > 0:
+            new_floors[elevator-1].append(item)
+            if is_valid(new_floors[elevator-1]):
+                yield encode(elevator-1, new_floors), 1
+
+
+def distance_remaining(state_, goal):
+    elevator, floors_ = decode(state_)
+
+    dest = len(floors_) - 1
+    result = sum([(dest - i) * len(f_) for i, f_ in enumerate(floors_)])
+
+    return result
+
+
+# Init the starting state
 initial_state = [
-    ['polonium|G', 'thulium|G', 'thulium|M', 'promethium|G', 'ruthenium|G', 'ruthenium|M', 'cobalt|G', 'cobalt|M'],
-    ['polonium|M', 'promethium|M'],
+    [GEN(POLONIUM), GEN(THULIUM), MC(THULIUM), GEN(PROMENTHIUM), GEN(RUTHENIUM), MC(RUTHENIUM), GEN(COBALT), MC(COBALT),
+     GEN(ELERIUM), MC(ELERIUM), GEN(DILITHIUM), MC(DILITHIUM)],
+    [MC(POLONIUM), MC(PROMENTHIUM)],
     [],
     []
 ]
@@ -21,99 +146,21 @@ goal_state = [
     [],
     list(chain(*initial_state))
 ]
-person_floor = 0
+
+start = encode(0, initial_state)
+goal = encode(3, goal_state)
+
+# Find the solution!
+path = a_star(start, goal, possible_moves, distance_remaining)
+
+for state in path:
+    el, floors = decode(state)
+
+    for idx, f in enumerate(floors[::-1]):
+        elems = ' '.join(['{:3d}'.format(q) for q in f])
+        print "F{}: {}".format(len(floors) - idx, elems)
+
+    print ""
 
 
-class State(object):
-    def __init__(self, level, floors):
-        self.elevator = level
-        self.floors = floors
-
-    @staticmethod
-    def from_str(value):
-        split = value.split('\n')
-        return int(split[0]), [set(s.split(',')) for s in split[1:]]
-
-    def to_str(self):
-        return str(self.elevator) + '\n' + '\n'.join([','.join(sorted(f)) for f in self.floors])
-
-    def possible_moves(self):
-        level = self.elevator
-
-        # Try the 1 moves
-        for thing in self.floors[level]:
-
-
-            # Up
-            if level < len(self.floors):
-
-
-        # Try the 2 moves
-
-    @staticmethod
-    def valid_floor(floor):
-        microchips = [t for t in floor if t.endswith('|M')]
-        generators = [t for t in floor if t.endswith('|G')]
-
-        if len(generators) == 0:
-            return True
-
-        # TODO should handle case with multiple of the same type?
-        for m in microchips:
-            generator = m[:-2] + '|G'
-            if generator not in floor:
-                return False
-
-        return True
-
-
-def distance_remaining(state):
-    """ Score how close to being done we are, with 0 being finished """
-    num_floors = len(state)
-    return sum([len(state[i]) * (num_floors - i) for i in xrange(num_floors)])
-
-
-def a_star(initial_state_, goal_state_):
-    # Encode start/end state so we can easily compare and store in sets
-    encoded_start = encode_state(initial_state_, 0)
-    encoded_goal = encode_state(goal_state_, 0)
-
-    # Setup structures to track our progress
-    frontier = PriorityQueue()
-    frontier.put(encoded_start, 0)
-    came_from = {encoded_start: None}
-    cost_so_far = {encoded_start: 0}
-
-    # Loop checking possibilities
-    while not frontier.empty():
-        current = frontier.get()
-        level, state = decode_state(current)
-
-        if current == encoded_goal:
-            break
-
-        for move in possible_moves(level, state):
-            new_cost = cost_so_far[current] + 1
-            if move not in cost_so_far or new_cost < cost_so_far[move]:
-                cost_so_far[move] = new_cost
-                priority = new_cost + distance_remaining(move)
-                frontier.put(move, priority)
-                came_from[move] = current
-
-    # Walk back the path
-    current = encoded_goal
-    solution = []
-    while current != encoded_start:
-        solution.append(current)
-        current = came_from[current]
-
-    solution.append(current)
-
-    # Print it
-    for idx, x in enumerate(solution):
-        print idx
-        print x
-        print ''
-
-
-a_star(initial_state, goal_state)
+print "# moves: {}".format(len(path))
