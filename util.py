@@ -3,6 +3,21 @@ from Queue import PriorityQueue
 import math
 
 
+class Coord(object):
+    def __init__(self, x=0, y=0, z=0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __add__(self, other):
+        return Coord(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other):
+        return Coord(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def move(self, x=0, y=0, z=0):
+        return Coord(self.x + x, self.y + y, self.z + z)
+
 
 class Timer:
     """ Utility class for measuring elapsed time """
