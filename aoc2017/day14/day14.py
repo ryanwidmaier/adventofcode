@@ -23,26 +23,27 @@ hex_to_chars = {
 }
 
 G = nx.Graph()
-G.add_nodes_from([node(r, c) for r in xrange(128) for c in xrange(128)])
-
 
 bits = 0
 memory = []
 for r in xrange(128):
     result = twist_full('{}-{}'.format(input_val, r))
-    memory.append([])
+    memory.append('')
 
-    c = 0
+    c = -1
     for ch in result:
         bits += hex_to_bits[ch]
 
         new_bits = hex_to_chars[ch]
-        memory[-1].append(new_bits)
+        memory[-1] += new_bits
 
         # Update the graph
         for nch in new_bits:
+            c += 1
             if nch == '0':
                 continue
+
+            G.add_node(node(r, c))
 
             # Check Up
             if r > 0 and memory[r-1][c] == '1':
@@ -51,6 +52,7 @@ for r in xrange(128):
             # Check left
             if c > 0 and memory[r][c-1] == '1':
                 G.add_edge(node(r, c), node(r, c-1))
+
 print bits
 print number_connected_components(G)
 
