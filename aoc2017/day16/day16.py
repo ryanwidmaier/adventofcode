@@ -49,6 +49,8 @@ def main():
     state_history[''.join(state)] = 0
 
     start = int((1000000000 / 36) * 36) + 1
+
+
     for x in xrange(start, 1000000001):
         state = do_stuff(state, data)
         state_str = ''.join(state)
