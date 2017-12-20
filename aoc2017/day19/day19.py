@@ -15,7 +15,7 @@ def can_move(direction, grid_, r, c, allow_forbidden):
         if grid_[r][c] == forbidden[direction]:
             return False
 
-    return grid_[r][c] != ' '
+    return grid_[r][c] not in [' ', '\r', '\n', '\t']
 
 
 def move(direction, r, c):
@@ -45,12 +45,13 @@ dirs = {
 
 # Find start
 r, c = 0, grid[0].find('|')
-
+pos = (r, c)
+steps = 0
 
 letter = []
 last_dir = 'S'
 while True:
-    print "@ {},{}".format(r, c)
+    # print "@ {},{}   {}".format(r, c, last_dir)
 
     if grid[r][c] in string.ascii_letters:
         letter.append(grid[r][c])
@@ -63,7 +64,14 @@ while True:
     cant_move = True
     for idx, try_dir in enumerate(dirs[last_dir]):
         if can_move(try_dir, grid, r, c, idx==0):
+            if last_dir != try_dir and len(letter) > 0:
+                print "@ {},{}   {}".format(r+1, c+1, try_dir)
+                here = 0
+
             r, c = move(try_dir, r, c)
+            pos = (r, c)
+            steps += 1
+
             last_dir = try_dir
             cant_move = False
             break
@@ -71,4 +79,5 @@ while True:
     if cant_move:
         break
 
-print letter
+print ''.join(letter)
+print "Steps: {}".format(steps)

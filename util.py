@@ -9,15 +9,35 @@ class Coord(object):
         self.y = y
         self.z = z
 
+    def move(self, x=0, y=0, z=0):
+        return Coord(self.x + x, self.y + y, self.z + z)
+
+    def manhattan(self, target=None):
+        target = Coord(0, 0, 0) if target is None else target
+        return abs(self.x - target.x) + abs(self.y - target.y) + abs(self.z - target.z)
+
     def __add__(self, other):
         return Coord(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __iadd__(self, other):
+        self.x += other.x
+        self.y += other.y
+        self.z += other.z
+
+        return self
 
     def __sub__(self, other):
         return Coord(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def move(self, x=0, y=0, z=0):
-        return Coord(self.x + x, self.y + y, self.z + z)
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.z == other.z
 
+    def __ne__(self, other):
+        return not (self.x == other.x and self.y == other.y and self.z == other.z)
+
+    def __hash__(self):
+        """Overrides the default implementation"""
+        return hash(tuple(sorted(self.__dict__.items())))
 
 class Timer:
     """ Utility class for measuring elapsed time """
