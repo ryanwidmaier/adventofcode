@@ -3,12 +3,15 @@ from collections import deque
 
 
 class SoundAssembler(object):
-    def __init__(self, commands, send_q, recv_q):
-        self.registers = {}
+    def __init__(self, commands, send_q, recv_q, prog):
+        self.registers = {'p': prog}
         self.commands = commands
         self.last_sent = None
         self.send_q = send_q
         self.recv_q = recv_q
+        self.prog = prog
+        self.num_sent = 0
+        self.idx = 0
 
     def read_register(self, value):
         if value in string.ascii_letters:
@@ -19,10 +22,18 @@ class SoundAssembler(object):
 
         return int(value)
 
+    def has_work(self):
+        return not self.is_locked() and not self.is_terminated()
+
+    def is_locked(self):
+        return len(self.recv_q) == 0
+
+    def is_terminated(self):
+        return not (0 <= self.idx < len(self.commands))
+
     def run(self):
-        idx = 0
-        while 0 <= idx < len(self.commands):
-            tokens = self.commands[idx]
+        while 0 <= self.idx < len(self.commands):
+            tokens = self.commands[self.idx]
             cmd, reg = tokens[0], tokens[1]
 
             # Get/parse the arg
@@ -37,7 +48,8 @@ class SoundAssembler(object):
             if cmd == 'set':
                 self.registers[reg] = arg
             elif cmd == 'snd':
-                self.last_sent = self.read_register(reg)
+                self.send_q.append(self.read_register(reg))
+                self.num_sent += 1
             elif cmd == 'add':
                 self.registers[reg] += arg
             elif cmd == 'mul':
@@ -45,13 +57,17 @@ class SoundAssembler(object):
             elif cmd == 'mod':
                 self.registers[reg] %= arg
             elif cmd == 'rcv':
-                if self.read_register(reg) != 0:
-                    return self.last_sent
+                if len(self.recv_q) == 0:
+                    return
+
+                self.registers[cmd] = self.recv_q.pop()
             elif cmd == 'jgz':
                 if self.read_register(reg) > 0:
-                    idx += (arg - 1)
+                    self.idx += arg - 1
 
-            idx += 1
+            self.idx += 1
+
+        print "Prog {} TERMINATED".format(self.prog)
 
 
 commands = []
@@ -60,8 +76,21 @@ for line in fin:
     line = line.rstrip()
     commands.append(line.split())
 
-target = SoundAssembler(commands)
-recovered = target.run()
 
-print target.registers
-print recovered
+q0, q1 = deque(), deque()
+
+prog0 = SoundAssembler(commands, q1, q0, 0)
+prog1 = SoundAssembler(commands, q0, q1, 1)
+
+prog1.run()
+prog0.run()
+
+while prog0.has_work() or prog1.has_work():
+    prog1.run()
+    prog0.run()
+
+prog1.run()
+prog0.run()
+
+print "0: {}".format(prog0.num_sent)
+print "1: {}".format(prog1.num_sent)
