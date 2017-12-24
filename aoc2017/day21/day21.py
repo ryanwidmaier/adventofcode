@@ -12,7 +12,7 @@ class Rule(object):
         self.patterns.append(np.rot90(self.patterns[-1]))
         self.patterns.append(np.rot90(self.patterns[-1]))
         self.patterns.append(np.rot90(self.patterns[-1]))
-        self.patterns.append(np.flip(self.patterns[0], axis=0))
+        self.patterns.append(np.fliplr(self.patterns[0]))
         self.patterns.append(np.rot90(self.patterns[-1]))
         self.patterns.append(np.rot90(self.patterns[-1]))
         self.patterns.append(np.rot90(self.patterns[-1]))
@@ -53,9 +53,9 @@ rule_set = RuleSet('input.txt')
 image = grid_from_pattern('.#./..#/###')
 print image
 
-for i in xrange(5):
+for i in xrange(18):
     size = image.shape[0]
-    split_size = 3 if size % 3 == 0 else 2
+    split_size = 2 if size % 2 == 0 else 3
 
     # Convert the sub images
     output = []
