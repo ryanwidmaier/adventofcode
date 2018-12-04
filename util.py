@@ -138,7 +138,7 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
         states_tried += 1
         if timer.elapsed_secs() > 5:
             timer.reset()
-            print "States tried: {}, Dist: {}".format(states_tried, distance_remaining_fn(current, goal))
+            print("States tried: {}, Dist: {}".format(states_tried, distance_remaining_fn(current, goal)))
 
         if current == goal:
             break
@@ -211,3 +211,17 @@ class Assembler(object):
 
     def jump(self, amount):
         self.index += self.read_register(amount) - 1  # -1 b/c we always do + 1 after each instruction
+
+
+def argmax(seq, key=None):
+    """
+    Return the index of the max element on a list, or the key w/ the max value on a dict.  key can take a lambda
+    that will be given the value and can return a derived key
+     """
+    if isinstance(seq, dict):
+        seq = seq.items()
+    else:
+        seq = enumerate(seq)
+
+    m = max(seq, key=lambda x: key(x[1]) if key else x[1])
+    return m[0]
