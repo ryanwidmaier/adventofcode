@@ -15,7 +15,7 @@ class Coord(object):
         return Coord(self.x + x, self.y + y, self.z + z)
 
     def manhattan(self, target=None):
-        target = Coord(0, 0, 0, 0, 0) if target is None else target
+        target = Coord(0, 0, 0) if target is None else target
         return abs(self.x - target.x) + abs(self.y - target.y) + abs(self.z - target.z)
 
     def __add__(self, other):
@@ -41,6 +41,14 @@ class Coord(object):
         """Overrides the default implementation"""
         return hash(tuple(sorted(self.__dict__.items())))
 
+    def __str__(self):
+        if self.z:
+            return "({}, {}, {})".format(self.x, self.y, self.z)
+
+        return "({}, {})".format(self.x, self.y)
+
+    def __repr__(self):
+        return str(self)
 
 class CoordMat(object):
     def __init__(self, r=0, c=0):
@@ -225,3 +233,40 @@ def argmax(seq, key=None):
 
     m = max(seq, key=lambda x: key(x[1]) if key else x[1])
     return m[0]
+
+
+def argmin(seq, key=None):
+    """
+    Return the index of the max element on a list, or the key w/ the max value on a dict.  key can take a lambda
+    that will be given the value and can return a derived key
+     """
+    if isinstance(seq, dict):
+        seq = seq.items()
+    else:
+        seq = enumerate(seq)
+
+    m = min(seq, key=lambda x: key(x[1]) if key else x[1])
+    return m[0]
+
+
+def point_in_triangle(point, tri, boundary_counts=False):
+    """ return true if a point is inside a triangle """
+    def sign(p1, p2, p3):
+        return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+
+    d1 = sign(point, tri[0], tri[1])
+    d2 = sign(point, tri[1], tri[2])
+    d3 = sign(point, tri[2], tri[0])
+
+    if not boundary_counts:
+        if d1 == 0 or d2 == 0 or d3 == 0:
+            return False
+
+    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+
+    return not (has_neg and has_pos)
+
+#
+# print point_in_triangle(Coord(1, 1), [Coord(0, 0), Coord(2, 2), Coord(2, 0)])
+# print point_in_triangle(Coord(1, 1), [Coord(0, 0), Coord(2, 0), Coord(2, 2)])
