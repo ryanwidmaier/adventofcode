@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta
+import logging
 from Queue import PriorityQueue
 import math
 from collections import defaultdict, namedtuple
 import string
+
+logger = logging.getLogger(__name__)
 
 
 class Coord(object):
@@ -267,6 +270,46 @@ def point_in_triangle(point, tri, boundary_counts=False):
 
     return not (has_neg and has_pos)
 
-#
-# print point_in_triangle(Coord(1, 1), [Coord(0, 0), Coord(2, 2), Coord(2, 0)])
-# print point_in_triangle(Coord(1, 1), [Coord(0, 0), Coord(2, 0), Coord(2, 2)])
+
+class RateLogger(object):
+    """
+    Helper class for printing status when processing lots of records. You can use this class to keep track of
+    how many records you have processed and print every N records so you can get a rough feel of how far the process
+    is and how fast it is going.
+    """
+    def __init__(self, log_every_n=1000, log_fn=None):
+        self.total = 0
+        self.diff = 0
+        self.log_every_n = log_every_n
+        self.timer = Timer()
+
+        self.log_fn = log_fn
+        if not self.log_fn:
+            self.log_fn = lambda r: "Processing {} records took {}s.  Total={}".format(r.log_every_n,
+                                                                                       r.timer.elapsed_secs(),
+                                                                                       r.total)
+
+    def inc(self, n=1):
+        self.diff += n
+
+        # start total used to store the original total so we can have it at the correct values both at the end of this
+        # fn and in the loop.
+        start_total = self.total
+        self.total = int(self.total / self.log_every_n) * self.log_every_n
+
+        while self.diff >= self.log_every_n:
+            self.diff -= self.log_every_n
+
+            # Incrementing total here so available for log with correct value. Needs to be done here in case
+            # n is greater than the log_every_n size.
+            self.total += self.log_every_n
+            logger.info(self.log_fn(self))
+
+            # Reset the timer for the next block
+            self.timer.reset()
+
+        # Set total to the correct final total which may not line up with the block size
+        self.total = start_total + n
+
+    def total_time(self):
+        return self.timer.elapsed()
