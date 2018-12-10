@@ -43,10 +43,10 @@ min_delta_height = delta_height
 
 
 def log(r):
-    return "Processing {} records took {}s.  Total={}, delta={}".format(r.log_every_n,
-                                                       r.timer.elapsed_secs(),
-                                                       r.total,
-                                                                        delta_height)
+    return "Processing {} records took {}s.  Total={}, delta={}"\
+        .format(r.log_every_n, r.timer.elapsed_secs(), r.total, delta_height)
+
+
 rate_logger = RateLogger(log_fn=log)
 tick = 0
 
