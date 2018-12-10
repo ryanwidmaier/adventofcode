@@ -19,7 +19,7 @@ max_x = max([p.x for p in points])
 max_y = max([p.y for p in points])
 
 
-def compute(delta, fout=None):
+def compute_part1(delta, fout=None):
     print "Computing closest for each grid point ({}, {}) -> ({}, {}) with +/- {}" \
         .format(0, 0, max_x, max_y, delta)
 
@@ -45,9 +45,25 @@ def compute(delta, fout=None):
     return dict(area)
 
 
+def compute_part2(delta):
+    print "Computing part2 for each grid point ({}, {}) -> ({}, {}) with +/- {}" \
+        .format(0, 0, max_x, max_y, delta)
+
+    area = 0
+    for y in xrange(-delta, max_y + 1 + delta):
+        for x in xrange(-delta, max_x + 1 + delta):
+            c = Coord(x, y)
+
+            dist = sum([c.manhattan(p) for p in points])
+            if dist < 10000:
+                area += 1
+
+    return area
+
+
 # fout = open('out.txt', 'w')
-area0 = compute(0)
-area50 = compute(50)
+area0 = compute_part1(0)
+area50 = compute_part1(50)
 
 infinite = [k for k in area0 if area0[k] != area50[k]]
 finite = {k: v for k, v in area0.iteritems() if k not in infinite}
@@ -65,6 +81,8 @@ for idx in sorted(area0):
 max_id = argmax(area0)
 print "Max: area={}, index={}, point={}".format(area0[max_id], max_id, points[max_id])
 
+
+print "Part 2: {}".format(compute_part2(10))
 
 # # Points are finite if they are contained in a triangle by any 3 other points
 # infinite = set([(idx, p) for idx, p in enumerate(points)])

@@ -32,7 +32,7 @@ class Coord(object):
         return self
 
     def __sub__(self, other):
-        return Coord(self.x + other.x, self.y + other.y, self.z + other.z)
+        return Coord(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.z == other.z
@@ -75,7 +75,7 @@ class CoordMat(object):
         return self
 
     def __sub__(self, other):
-        return CoordMat(self.r + other.r, self.c + other.c)
+        return CoordMat(self.r - other.r, self.c - other.c)
 
     def __eq__(self, other):
         return self.r == other.r and self.c == other.c
@@ -303,7 +303,7 @@ class RateLogger(object):
             # Incrementing total here so available for log with correct value. Needs to be done here in case
             # n is greater than the log_every_n size.
             self.total += self.log_every_n
-            logger.info(self.log_fn(self))
+            print self.log_fn(self)
 
             # Reset the timer for the next block
             self.timer.reset()
