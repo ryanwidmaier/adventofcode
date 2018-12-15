@@ -88,6 +88,47 @@ class CoordMat(object):
         return hash(tuple(sorted(self.__dict__.items())))
 
 
+class GridCar(object):
+    dirs = ['north', 'east', 'south', 'west']
+
+    def __init__(self, start, facing, invert_y=False):
+        """
+        Args:
+            start (Coord)
+            facing (str): North, South, East, West
+        """
+        self.position = start
+        self.facing = facing.lower()
+        self.invert_y = invert_y
+
+    def forward(self, amount=1):
+        if self.facing == 'north':
+            amount *= -1 if self.invert_y else 1
+            self.position += Coord(0, amount)
+        elif self.facing == 'south':
+            amount *= 1 if self.invert_y else -1
+            self.position += Coord(0, amount)
+        elif self.facing == 'east':
+            self.position += Coord(amount, 0)
+        elif self.facing == 'west':
+            self.position += Coord(-amount, 0)
+
+    def backward(self, amount=1):
+        self.forward(amount * -1)
+
+    def left(self):
+        self.facing = self.dirs[(self.dirs.index(self.facing) - 1) % 4]
+
+    def right(self):
+        self.facing = self.dirs[(self.dirs.index(self.facing) + 1) % 4]
+
+    def reverse(self):
+        self.facing = self.dirs[(self.dirs.index(self.facing) + 2) % 4]
+
+    def turn_to(self, direction):
+        self.facing = direction.lower()
+
+
 class Timer:
     """ Utility class for measuring elapsed time """
 
@@ -119,20 +160,20 @@ def cartesian_distance(pos, goal):
 
 def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
     """
+    Find the shortest path
 
-    :param start:
-    :param goal:
-    :param possible_moves_fn: func(current_position) -> iterable of (new_pos, move_cost)
-    :param distance_remaining_fn: func(pos, goal) -> estimated cost to finish
-    :return:
+    Args:
+        start: Starting state
+        goal: Target state
+        possible_moves_fn: func(current_position) -> iterable of (new_pos, move_cost)
+        distance_remaining_fn: func(pos, goal) -> estimated cost to finish
+    Returns:
+
     """
     states_tried = 0
 
     if distance_remaining_fn is None:
         distance_remaining_fn = cartesian_distance
-
-    # Encode start/end state so we can easily compare and store in sets
-    start = start
 
     # Setup structures to track our progress
     frontier = PriorityQueue()
@@ -141,6 +182,7 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
     cost_so_far = {start: 0}
 
     timer = Timer()
+    found = False
 
     # Loop checking possibilities
     while not frontier.empty():
@@ -152,6 +194,7 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
             print("States tried: {}, Dist: {}".format(states_tried, distance_remaining_fn(current, goal)))
 
         if current == goal:
+            found = True
             break
 
         for move, move_cost in possible_moves_fn(current):
@@ -162,6 +205,9 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
                 frontier.put((priority, move))
                 came_from[move] = current
 
+    if not found:
+        return None
+
     # Walk back the path
     current = goal
     solution = []
@@ -171,6 +217,57 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
 
     # Print it
     return solution[::-1]
+
+
+def shortest_path(start, goal, possible_moves, prune_paths):
+    """
+    Compute all shortest paths.  Assumes each move is the same cost.  Not as efficient as A* !!
+
+    Args:
+         start: Starting state/position
+         goal: Ending state/position
+         possible_moves: func(current, goal) -> [next_move1, next_move2]
+         prune_paths: func(paths: list(list(state))) -> list(list(state)).  Lets you remove partial paths from
+            further consideration
+    Returns:
+        list[list[state]]: List of shortest paths
+    """
+    visited = {start}
+    paths = [[start]]
+
+    #               .
+    #    .        . x .
+    #  . x .    . x - x .
+    #    .        . x .
+    #               .
+
+    while goal not in {p[-1] for p in paths}:
+        new_paths = []
+
+        # Add all possible 1 move paths from frontier that don't have a shorter path
+        for path in paths:
+            possible_dests = possible_moves(path[-1])
+            for pd in possible_dests:
+                if pd not in visited:
+                    new_paths.append(path + [pd])
+
+        if not new_paths:
+            return None
+
+        # Let the caller prune paths if they want
+        new_paths = prune_paths(new_paths)
+        new_paths = list(new_paths)
+
+        # Throw out remaining duplicates
+        collapse = {}
+        for p in new_paths:
+            if p[-1] not in collapse:
+                collapse[p[-1]] = p
+                visited.add(p[-1])
+
+        paths = collapse.values()
+
+    return next(p for p in paths if p[-1] == goal)
 
 
 AsmCommand = namedtuple('AsmCommand', 'cmd reg value')
