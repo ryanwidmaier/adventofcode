@@ -256,7 +256,6 @@ def shortest_path(start, goal, possible_moves, prune_paths):
 
         # Let the caller prune paths if they want
         new_paths = prune_paths(new_paths)
-        new_paths = list(new_paths)
 
         # Throw out remaining duplicates
         collapse = {}
