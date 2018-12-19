@@ -42,7 +42,7 @@ class Coord(object):
 
     def __hash__(self):
         """Overrides the default implementation"""
-        return hash(tuple(sorted(self.__dict__.items())))
+        return hash((self.x, self.y, self.z))
 
     def __str__(self):
         if self.z:
@@ -52,6 +52,19 @@ class Coord(object):
 
     def __repr__(self):
         return str(self)
+
+    def copy(self):
+        return Coord(x=self.x, y=self.y, z=self.z)
+
+    @staticmethod
+    def minmax(*coords):
+        min_y = min(c.y for c in coords)
+        max_y = max(c.y for c in coords)
+        min_x = min(c.x for c in coords)
+        max_x = max(c.x for c in coords)
+
+        return Coord(min_x, min_y), Coord(max_x, max_y)
+
 
 class CoordMat(object):
     def __init__(self, r=0, c=0):
@@ -219,13 +232,13 @@ def a_star(start, goal, possible_moves_fn, distance_remaining_fn=None):
     return solution[::-1]
 
 
-def shortest_path(start, goal, possible_moves, prune_paths):
+def shortest_path_bfs(start, goal, possible_moves, prune_paths):
     """
     Compute all shortest paths.  Assumes each move is the same cost.  Not as efficient as A* !!
 
     Args:
          start: Starting state/position
-         goal: Ending state/position
+         goal: lambda, returns true when goal reached
          possible_moves: func(current, goal) -> [next_move1, next_move2]
          prune_paths: func(paths: list(list(state))) -> list(list(state)).  Lets you remove partial paths from
             further consideration
@@ -241,7 +254,7 @@ def shortest_path(start, goal, possible_moves, prune_paths):
     #    .        . x .
     #               .
 
-    while goal not in {p[-1] for p in paths}:
+    while any(goal(p[-1]) for p in paths):
         new_paths = []
 
         # Add all possible 1 move paths from frontier that don't have a shorter path

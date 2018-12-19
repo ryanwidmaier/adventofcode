@@ -1,4 +1,4 @@
-from util import a_star, Coord, shortest_path
+from util import a_star, Coord, shortest_path_bfs
 from collections import defaultdict
 from itertools import groupby
 import unittest
@@ -65,8 +65,6 @@ class NPC(object):
         # print "    {} potential destinations".format(len(attack_positions))
 
         # Filter by reachable
-        closest = [a_star(self.pos, a, possible_moves_cost, lambda c, g: c.manhattan(g))
-                   for a in attack_positions]
         closest = [c for c in closest if c]
         # print "    {} reachable".format(len(closest))
 
