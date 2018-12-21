@@ -51,7 +51,7 @@ class Coord(object):
         return "({}, {})".format(self.x, self.y)
 
     def __repr__(self):
-        return str(self)
+        return 'Coord' + str(self)
 
     def copy(self):
         return Coord(x=self.x, y=self.y, z=self.z)
@@ -101,7 +101,50 @@ class CoordMat(object):
         return hash(tuple(sorted(self.__dict__.items())))
 
 
+class GridWalker(object):
+    """ Grid coordinate that can move in cardinal directions. """
+    def __init__(self, start, track_path=False):
+        self.position = start.copy()
+        self.previous = None
+        self.track_path = track_path
+        self.path = [start]
+
+    def move(self, direction, n=1):
+        d = direction.upper()
+        if d in {'W', 'WEST'}:
+            self.west(n)
+        elif d in {'E', 'EAST'}:
+            self.east(n)
+        elif d in {'N', 'NORTH'}:
+            self.north(n)
+        elif d in {'S', 'SOUTH'}:
+            self.south(n)
+
+    def north(self, n=1):
+        self._do_move(Coord(0, n))
+
+    def south(self, n=1):
+        self._do_move(Coord(0, -n))
+
+    def east(self, n=1):
+        self._do_move(Coord(n, 0))
+
+    def west(self, n=1):
+        self._do_move(Coord(-n, 0))
+
+    def _do_move(self, offset):
+        self.previous = self.position.copy()
+        self.position += offset
+
+        if self.track_path:
+            self.path.append(self.position.copy())
+
+    def __repr__(self):
+        return 'GridWalker({})'.format(repr(self.position))
+
+
 class GridCar(object):
+    """ Grid coordinate with associated facing direction that can move forward/backward and turn. """
     dirs = ['north', 'east', 'south', 'west']
 
     def __init__(self, start, facing, invert_y=False):
@@ -280,6 +323,37 @@ def shortest_path_bfs(start, goal, possible_moves, prune_paths):
         paths = collapse.values()
 
     return next(p for p in paths if p[-1] == goal)
+
+
+def all_shortest_paths(start, possible_moves):
+    """
+    Compute all shortest paths.  Assumes each move is the same cost.  Not as efficient as A* !!
+
+    Args:
+         start: Starting state/position
+         possible_moves: func(current) -> [next_move1, next_move2]
+    Returns:
+        list[list[state]]: List of shortest paths
+    """
+    shortest = {start: [start]}
+    frontier = [start]
+
+    while len(frontier) > 0:
+        new_frontier = set()
+        for point in frontier:
+            next_points = possible_moves(point)
+
+            for np in next_points:
+                # If we are backtracking, ignore this one
+                if np in shortest.keys():
+                    continue
+
+                new_frontier.add(np)
+                shortest[np] = shortest[point] + [np]
+
+        frontier = new_frontier
+
+    return shortest.values()
 
 
 AsmCommand = namedtuple('AsmCommand', 'cmd reg value')
