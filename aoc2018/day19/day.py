@@ -1,7 +1,6 @@
 import re
-from collections import defaultdict, namedtuple
-import itertools
-from util import argmax, argmin, a_star, Coord, RateLogger
+from collections import namedtuple
+from util import RateLogger
 from pprint import pprint
 
 AsmCommand = namedtuple('AsmCommand', 'opcode a b c')
@@ -12,6 +11,7 @@ class Assembler(object):
         self.ip = -1
         self.ip_register = None
         self.registers = {i: 0 for i in xrange(6)}
+        self.registers[0] = 1
         self.commands = []
 
     def load(self, fname):
@@ -35,22 +35,28 @@ class Assembler(object):
                 self.commands.append(AsmCommand(m.group('cmd'), int(m.group('a')), int(m.group('b')), int(m.group('c'))))
 
     def run(self):
+        self.lines_hit = [0] * len(self.commands)
+
         rate_logger = RateLogger(log_every_n=500000)
         while 0 <= self.ip + 1 < len(self.commands):
             self.ip += 1
             rate_logger.inc()
 
+            # if rate_logger.total >= 100000000:
+            #     break
+
             command = self.commands[self.ip]
 
             self.registers[self.ip_register] = self.ip
+            self.lines_hit[self.ip] += 1
             getattr(self, command.opcode)(command.a, command.b, command.c)
 
-            # print "{:3} : {:4} {:2} {:2} {:2}  --> {:3} {:3} {:3} {:3} {:3} {:3} " \
-            #     .format(self.ip, command.opcode, command.a, command.b, command.c,
-            #             *self.registers.values())
-
-            # if self.ip != self.registers[self.ip_register]:
-            #     print "Jumped {} -> {}".format(self.ip, self.registers[self.ip_register])
+            print "{:3} : {:4} {:2} {:2} {:2}  --> {:3} {:3} {:3} {:3} {:3} {:3} " \
+                .format(self.ip, command.opcode, command.a, command.b, command.c,
+                        *self.registers.values())
+            #
+            if self.ip != self.registers[self.ip_register]:
+                print "Jumped {} -> {}".format(self.ip, self.registers[self.ip_register])
 
             self.ip = self.registers[self.ip_register]
 
@@ -108,3 +114,7 @@ asm.load('input.txt')
 asm.run()
 
 pprint(asm.registers.values())
+
+for idx, cmd in enumerate(asm.commands):
+    print "{:3} : {:4} {:2} {:2} {:2}  - {}" \
+        .format(idx, cmd.opcode, cmd.a, cmd.b, cmd.c, asm.lines_hit[idx])
