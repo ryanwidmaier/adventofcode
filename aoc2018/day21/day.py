@@ -38,8 +38,8 @@ class Assembler(object):
             self.ip += 1
             rate_logger.inc()
 
-            # if rate_logger.total >= 100000000:
-            #     break
+            if rate_logger.total >= 10000:
+                break
 
             command = self.commands[self.ip]
 
@@ -47,12 +47,12 @@ class Assembler(object):
             self.lines_hit[self.ip] += 1
             getattr(self, command.opcode)(command.a, command.b, command.c)
 
-            # print "{:3} : {:4} {:2} {:2} {:2}  --> {:3} {:3} {:3} {:3} {:3} {:3} " \
-            #     .format(self.ip, command.opcode, command.a, command.b, command.c,
-            #             *self.registers.values())
-            # #
-            # if self.ip != self.registers[self.ip_register]:
-            #     print "Jumped {} -> {}".format(self.ip, self.registers[self.ip_register])
+            cmd_s = "{:4} {:2} {:2} {:2}".format(command.opcode, command.a, command.b, command.c)
+            print "{:3} : {:20}  --> {:5} {:5} {:5} {:5} {:10} {:7} " \
+                .format(self.ip, cmd_s, *self.registers.values())
+            #
+            if self.ip != self.registers[self.ip_register]:
+                print "Jumped {} -> {}".format(self.ip, self.registers[self.ip_register])
 
             self.ip = self.registers[self.ip_register]
 
