@@ -10,6 +10,15 @@ logger = logging.getLogger(__name__)
 
 class Coord(object):
     def __init__(self, x=0, y=0, z=0):
+        if isinstance(x, str):
+            x = int(x)
+
+        if isinstance(y, str):
+            y = int(y)
+
+        if isinstance(z, str):
+            z = int(z)
+
         self.x = x
         self.y = y
         self.z = z
@@ -34,6 +43,21 @@ class Coord(object):
     def __sub__(self, other):
         return Coord(self.x - other.x, self.y - other.y, self.z - other.z)
 
+    def __mul__(self, other):
+        """ Multiply by scalar """
+        ret = self.copy()
+        ret.x *= other
+        ret.y *= other
+        ret.z *= other
+        return ret
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret.x /= other
+        ret.y /= other
+        ret.z /= other
+        return ret
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.z == other.z
 
@@ -46,9 +70,9 @@ class Coord(object):
 
     def __str__(self):
         if self.z:
-            return "({}, {}, {})".format(self.x, self.y, self.z)
+            return "({:,}, {:,}, {:,})".format(self.x, self.y, self.z)
 
-        return "({}, {})".format(self.x, self.y)
+        return "({:,}, {:,})".format(self.x, self.y)
 
     def __repr__(self):
         return 'Coord' + str(self)
@@ -406,6 +430,17 @@ class Assembler(object):
     def jump(self, amount):
         self.index += self.read_register(amount) - 1  # -1 b/c we always do + 1 after each instruction
 
+class Memoize:
+
+    def __init__(self, fn):
+        self.fn = fn
+        self.memo = {}
+
+    def __call__(self, *args):
+        if args not in self.memo:
+	    self.memo[args] = self.fn(*args)
+        return self.memo[args]
+
 
 def argmax(seq, key=None):
     """
@@ -434,6 +469,26 @@ def argmin(seq, key=None):
     m = min(seq, key=lambda x: key(x[1]) if key else x[1])
     return m[0]
 
+
+def minmax(seq, key=None):
+    key = key if key else lambda v: v
+
+    min_v = None
+    min_k = None
+    max_v = None
+    max_k = None
+
+    for v in seq:
+        k = key(v)
+        if min_k is None or k < min_k:
+            min_v = v
+            min_k = k
+
+        if max_k is None or k > max_k:
+            max_v = v
+            max_k = k
+
+    return (min_v, max_v)
 
 def point_in_triangle(point, tri, boundary_counts=False):
     """ return true if a point is inside a triangle """

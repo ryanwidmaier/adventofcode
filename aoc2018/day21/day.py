@@ -11,6 +11,7 @@ class Assembler(object):
         self.ip = -1
         self.ip_register = None
         self.registers = {i: 0 for i in xrange(6)}
+        self.registers[0] = 12420065
         self.commands = []
 
     def load(self, fname):
@@ -37,9 +38,9 @@ class Assembler(object):
         while 0 <= self.ip + 1 < len(self.commands):
             self.ip += 1
             rate_logger.inc()
-
-            if rate_logger.total >= 10000:
-                break
+            #
+            # if rate_logger.total >= 10000:
+            #     break
 
             command = self.commands[self.ip]
 
