@@ -5,14 +5,6 @@ X, Y, Z, RANGE = 0, 1, 2, 3
 ORIGIN = (0, 0, 0, 0)
 
 
-def part1(bots):
-    # find the nanobot with the largest range
-    strongest = max(bots, key=lambda bot: bot[RANGE])
-    distances = [manhattan(bot, strongest) for bot in bots]
-
-    # number of nanobots in range of the strongest nanobot
-    return len([d for d in distances if d <= strongest[RANGE]])
-
 
 def part2(bots):
     # build a graph with edges between overlapping nanobots
