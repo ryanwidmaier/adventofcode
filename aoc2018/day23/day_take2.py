@@ -1,6 +1,5 @@
 import re
 import networkx as nx
-from parse import parse
 
 X, Y, Z, RANGE = 0, 1, 2, 3
 ORIGIN = (0, 0, 0, 0)
@@ -44,14 +43,23 @@ def manhattan(a, b):
     return abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)
 
 
-def _parse(lines):
-    # list of tuples (x, y, z, range)
-    return [tuple(parse("pos=<{:d},{:d},{:d}>, r={:d}", line)) for line in lines]
-
-
 # pos=<-27072311,19664231,23616729>, r=91300896
 parse_re = re.compile(r'pos=<(?P<x>-?\d+),(?P<y>-?\d+),(?P<z>-?\d+)>, r=(?P<r>-?\d+)')
 
 
+def parse(fname):
+    transmitters = []
+
+    f = open(fname)
+    for line in f:
+        line = line.rstrip()
+
+        m = parse_re.search(line)
+        if m:
+            transmitters.append((int(m.group('x')), int(m.group('y')), int(m.group('z')), int(m.group('r'))))
+
+    return transmitters
+
+
 if __name__ == "__main__":
-    print(part2(_parse(open(r"input.txt").readlines())))
+    print(part2(parse("input.txt")))
