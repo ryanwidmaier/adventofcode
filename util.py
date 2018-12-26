@@ -438,7 +438,7 @@ class Memoize:
 
     def __call__(self, *args):
         if args not in self.memo:
-	    self.memo[args] = self.fn(*args)
+            self.memo[args] = self.fn(*args)
         return self.memo[args]
 
 
@@ -489,6 +489,7 @@ def minmax(seq, key=None):
             max_k = k
 
     return (min_v, max_v)
+
 
 def point_in_triangle(point, tri, boundary_counts=False):
     """ return true if a point is inside a triangle """
@@ -551,3 +552,5 @@ class RateLogger(object):
 
     def total_time(self):
         return self.timer.elapsed()
+
+
