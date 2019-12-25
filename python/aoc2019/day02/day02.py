@@ -9,7 +9,7 @@ class Day02Computer(Computer):
         from which you should read the input values, and the third indicates the position at which the output should
         be stored.
         """
-        self.memory[c] = self.memory[a] + self.memory[b]
+        self.memory[self.param(c)] = self.memory[self.param(a)] + self.memory[self.param(b)]
         self.op_params = [a, b]
         self.op_output = [c]
 
@@ -18,12 +18,13 @@ class Day02Computer(Computer):
         Opcode 2 works exactly like opcode 1, except it multiplies the two inputs instead of adding them. Again, the
         three integers after the opcode indicate where the inputs and outputs are, not their values.
         """
-        self.memory[c] = self.memory[a] * self.memory[b]
+        self.memory[self.param(c)] = self.memory[self.param(a)] * self.memory[self.param(b)]
         self.op_params = [a, b]
         self.op_output = [c]
 
 
-computer = Day02Computer(debug=False)
-init_memory = computer.load_memory('input.txt')
+if __name__ == '__main__':
+    computer = Day02Computer(debug=False)
+    init_memory = computer.load_memory('input.txt')
 
-computer.find_inputs(init_memory, [1, 2], 19690720, upper=100)
+    computer.find_inputs(init_memory, [1, 2], 19690720, upper=100)

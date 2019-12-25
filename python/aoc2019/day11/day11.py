@@ -1,139 +1,9 @@
 from inspect import signature
-import itertools
 from collections import defaultdict
+from util import GridCar, Coord
 
 
-class Computer:
-    def __init__(self, debug=False):
-        self.ip = 0  # program counter
-        self.exit = False
-        self.commands_run = 0
-        self.memory = None
-        self.initial_memory = None
-        self.output = None
-        self.debug = debug
-        self.op_params = []
-        self.op_output = []
-
-    @staticmethod
-    def load_memory(filename):
-        """ Load memory and return it """
-        with open(filename) as f:
-            text = f.read()
-
-            # The program is a series of comma separated int's, not lines
-            text = text.strip()
-            text = text.replace('\n', '').replace('\r', '').replace(' ', '').replace('\t', '')
-            memory = [int(x) for x in text.split(',')]
-
-            return memory
-
-    def program(self, memory):
-        self.initial_memory = memory.copy()
-        self.memory = memory.copy()
-        self.ip = 0
-        self.commands_run = 0
-        self.program_init()
-
-    def run(self):
-        """ Run the program and print the outputs """
-        self.print('-', 0, [], [])
-
-        # Loop until program exits
-        self.exit = False
-        while not self.exit:
-            self.commands_run += 1
-            if not 0 <= self.ip < len(self.memory):
-                if self.debug:
-                    print("Segfault!")
-                return None
-
-            # Split into command/args
-            raw_opcode = self.memory[self.ip]
-            opcode = self.adjust_op(raw_opcode)
-
-            # Use reflection to figure out how many params the op takes
-            operation = getattr(self, f'op_{opcode}')
-            sig = signature(operation)
-            param_size = len(sig.parameters)
-
-            # Pull out the params
-            parameters = self.memory[self.ip + 1:self.ip + 1 + param_size]
-
-            before = None
-            if self.debug:
-                before = [self._fmt(p, i) for i, p in enumerate(parameters)]
-
-            # Run the command
-            ip_before = self.ip
-            operation(*parameters)
-
-            # Advance after processing op code (if no jump)
-            self.print(raw_opcode, ip_before, parameters, before)
-            if self.ip == ip_before:
-                self.ip += 1 + param_size
-
-        return None
-
-    def find_inputs(self, init_memory, input_positions, desired, output_position=0, upper=1000):
-        """ Search for inputs that produce the desired output """
-        for input_vals in itertools.product(*[range(0, upper) for _ in input_positions]):
-            # Set input values
-            memory = init_memory.copy()
-            for pos, val in zip(input_positions, input_vals):
-                memory[pos] = val
-
-            # Run the program
-            memory = self.run(memory.copy())
-            if memory is None:
-                continue
-
-            print(f"{output_position} = {memory[output_position]} when:")
-            for pos in input_positions:
-                print(f"  {pos} <- {memory[pos]}")
-
-            # Check for success
-            if memory[output_position] == desired:
-                break
-        else:
-            print("Not found!")
-
-    def print(self, op, ip, params, before):
-        """ Debug print status """
-        if not self.debug:
-            return
-
-        prefix = f'{self.commands_run:>4} ({ip:>4})'
-
-        after = [self._fmt(p, i) for i, p in enumerate(params)]
-        param_str = ' '.join(str(p) for p in params)
-        before_str = ' '.join(str(p) for p in before)
-        after_str = ' '.join(str(p) for p in after)
-
-        print(f"{prefix}: Op={op:>4}, Params= {param_str:<15}, Before= {before_str:<15}, After= {after_str}")
-
-    def _fmt(self, p, i):
-        if 0 <= p < len(self.memory):
-            return self.memory[p]
-        return '-'
-
-    def program_init(self):
-        """ Override if you need to do something before the program starts """
-        pass
-
-    def adjust_op(self, opcode):
-        return opcode
-
-    def adjust_params(self, params):
-        return params
-
-    def op_99(self):
-        self.exit = True
-        print("Exiting")
-
-
-
-class IntComputerFinal:
+class IntComputer11:
     def __init__(self, id_='A', debug=False):
         self.id = id_
         self.ip = 0  # program counter
@@ -147,7 +17,6 @@ class IntComputerFinal:
         self.mode = []
         self.print_addresses = []
         self.before_memory = []
-        self.initial_memory = None
 
     @staticmethod
     def load_memory(filename):
@@ -161,17 +30,11 @@ class IntComputerFinal:
             return [int(x) for x in text.split(',')]
 
     def program(self, memory_):
-        self.initial_memory = memory_.copy()
-        self.restart()
-
-    def restart(self):
-        self.memory = defaultdict(lambda: 0, dict(enumerate(self.initial_memory)))
+        self.memory = defaultdict(lambda: 0, dict(enumerate(memory_)))
         self.ip = 0
         self.relative_base = 0
         self.commands_run = 0
         self.exit = False
-        self.input = []
-        self.output = None
 
     def run_and_print(self):
         for output in self.run():
@@ -193,9 +56,6 @@ class IntComputerFinal:
             # Split into command/args
             raw_opcode = self.memory[self.ip]
             opcode = self.adjust_op(raw_opcode)
-
-            if opcode == 3 and len(self.input) == 0:
-                yield None
 
             # Use reflection to figure out how many params the op takes
             operation = getattr(self, f'op_{opcode}')
@@ -238,8 +98,8 @@ class IntComputerFinal:
     def translate(self, addrs):
         return [self.memory[x] if x is not None else '_' for x in addrs]
 
-    def add_input(self, *v):
-        self.input += v
+    def add_input(self, v):
+        self.input.append(v)
 
     def adjust_op(self, opcode):
         prefix = f'{opcode:0>6}'
@@ -337,3 +197,69 @@ class IntComputerFinal:
         """ Exit """
         self.exit = True
         print("Exiting")
+
+
+
+def double(gen):
+    ret = []
+    for x in gen:
+        ret.append(x)
+        if len(ret) == 2:
+            yield ret[0], ret[1]
+            ret = []
+
+
+def part1(comp):
+    hull = {}
+    comp.add_input(0)
+
+    robot = GridCar(Coord(0, 0), 'north')
+    for color, turn in double(comp.run()):
+        hull[robot.position] = color
+
+        # Turn and advance
+        if turn == 0:
+            robot.left()
+        else:
+            robot.right()
+        robot.forward()
+
+        comp.add_input(hull.get(robot.position, 0))
+
+    print(len(hull))
+
+
+def part2(comp):
+    hull = {Coord(0, 0): 1}
+    comp.add_input(1)
+
+    robot = GridCar(Coord(0, 0), 'north')
+    for color, turn in double(comp.run()):
+        hull[robot.position] = color
+
+        # Turn and advance
+        if turn == 0:
+            robot.left()
+        else:
+            robot.right()
+        robot.forward()
+
+        comp.add_input(hull.get(robot.position, 0))
+
+    min_x = min(h.x for h in hull)
+    min_y = min(h.y for h in hull)
+    max_x = max(h.x for h in hull)
+    max_y = max(h.y for h in hull)
+
+    for y in range(max_y, min_y-1, -1):
+        for x in range(min_x, max_x+1):
+            c = '#' if hull.get(Coord(x, y), 0) == 1 else ' '
+            print(c, end='')
+        print()
+
+
+comp = IntComputer11()
+comp.program(comp.load_memory('input.txt'))
+
+# part1(comp)
+part2(comp)
