@@ -194,7 +194,7 @@ class IntComputerFinal:
             raw_opcode = self.memory[self.ip]
             opcode = self.adjust_op(raw_opcode)
 
-            if opcode == 3 and len(self.input) == 0:
+            while opcode == 3 and len(self.input) == 0:
                 yield None
 
             # Use reflection to figure out how many params the op takes
