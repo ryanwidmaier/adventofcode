@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"regexp"
 )
 
 /** Read file from first cli arg and return lines */
@@ -31,4 +32,15 @@ func ReadLines(filename string) []string {
 	}
 
 	return lines
+}
+
+func ReadLinesRegexp(filename string, pattern string) [][]string {
+	var result [][]string
+	re := regexp.MustCompile(pattern)
+	lines := ReadLines(filename)
+
+	for _, v := range lines {
+		result = append(result, re.FindStringSubmatch(v))
+	}
+	return result
 }
