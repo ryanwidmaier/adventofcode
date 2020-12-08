@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 )
 
 /** Read file from first cli arg and return lines */
@@ -42,5 +43,28 @@ func ReadLinesRegexp(filename string, pattern string) [][]string {
 	for _, v := range lines {
 		result = append(result, re.FindStringSubmatch(v))
 	}
+	return result
+}
+
+func ParseLineGroups(lines []string, sep string) []string {
+	result := make([]string, 0)
+	build := ""
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			result = append(result, build)
+			build = ""
+		} else {
+			if len(build) > 0 {
+				build += sep
+			}
+			build += line
+		}
+	}
+	if len(build) > 0 {
+		result = append(result, build)
+	}
+
 	return result
 }
