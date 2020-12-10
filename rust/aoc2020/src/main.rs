@@ -3,13 +3,15 @@ use std::fs::File;
 use std::io::{self, BufRead};
 
 mod day07;
+mod day08;
 
 fn main() {
-    println!("Hello, world!");
+    let day_str= std::env::args().nth(1).expect("Day required.");
+    let fname = std::env::args().nth(2).expect("File required.");
+    let day: i32 = day_str.parse().unwrap();
 
     let base = "/Users/rwidmaier/repos/misc/adventofcode/rust/aoc2020/src";
-    let fname = "day07/input.txt";
-    let path = format!("{}/{}", base, fname);
+    let path = format!("{}/day{:02}/{}", base, day, fname);
 
     let f = File::open(&path)
         .expect(&*format!("Unable to open file: {}", &path));
@@ -22,6 +24,15 @@ fn main() {
         }
     }
 
-    day07::part1(&v);
-    day07::part2(&v);
+    match day {
+        7 => {
+            day07::part1(&v);
+            day07::part2(&v);
+        },
+        8 => {
+            day08::part1(&v);
+            day08::part2(&v);
+        },
+        _ => {}
+    }
 }
