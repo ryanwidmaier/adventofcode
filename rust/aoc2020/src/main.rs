@@ -4,6 +4,7 @@ use std::io::{self, BufRead};
 
 mod day07;
 mod day08;
+mod day09;
 
 fn main() {
     let day_str= std::env::args().nth(1).expect("Day required.");
@@ -32,6 +33,10 @@ fn main() {
         8 => {
             day08::part1(&v);
             day08::part2(&v);
+        },
+        9 => {
+            day09::part1(&v);
+            day09::part2(&v);
         },
         _ => {}
     }
