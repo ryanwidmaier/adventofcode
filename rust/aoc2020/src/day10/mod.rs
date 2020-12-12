@@ -52,13 +52,5 @@ pub fn part2(lines: &Vec<String>) {
         }
     }
 
-    let adapters_it: Vec<String> = adapters.iter().map(|x| format!("{:3}", x)).collect();
-    let sums_it: Vec<String> = sums.iter().map(|x| format!("{:3}", x)).collect();
-
-    // println!("");
-    // println!("{}", adapters_it.join(", "));
-    // println!("{}", sums_it.join(", "));
-    // println!("");
-
     println!("Part 2: {}", sums[0]);
 }
