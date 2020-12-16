@@ -1,7 +1,7 @@
 use std::ops;
 use std::fmt;
 
-#[derive(PartialEq, Eq, Debug, Hash)]
+#[derive(PartialEq, Eq, Debug, Hash, Copy, Clone)]
 pub struct Coord2 {
     pub x: i32,
     pub y: i32
@@ -16,6 +16,7 @@ impl Default for Coord2 {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum Direction {
     North,
     NorthEast,
@@ -52,6 +53,57 @@ impl Direction {
             into_iter().
             map(|d| d.coord()).
             collect()
+    }
+
+    pub fn directions4() -> Vec<Direction> {
+        vec![Direction::North,
+             Direction::East,
+             Direction::South,
+             Direction::West]
+    }
+
+    pub fn idx4(&self) -> usize {
+        match self {
+            Direction::North => 0,
+            Direction::East => 1,
+            Direction::South => 2,
+            Direction::West => 3,
+            _ => panic!("Unsupported cardinal direction!")
+        }
+    }
+
+    pub fn from_idx4(idx: usize) -> Direction {
+        match idx {
+            0 => Direction::North,
+            1 => Direction::East,
+            2 => Direction::South,
+            3 => Direction::West,
+            _ => {
+                panic!("Unsupported idx for direction4: {}", idx)
+            }
+        }
+    }
+
+    pub fn coords4() -> Vec<Coord2> {
+        Direction::directions4().
+            into_iter().
+            map(|d| d.coord()).
+            collect()
+    }
+}
+
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Direction::North => write!(f, "{}", "N"),
+            Direction::NorthEast => write!(f, "{}", "NE"),
+            Direction::East => write!(f, "{}", "E"),
+            Direction::SouthEast => write!(f, "{}", "SE"),
+            Direction::South => write!(f, "{}", "S"),
+            Direction::SouthWest => write!(f, "{}", "SW"),
+            Direction::West => write!(f, "{}", "W"),
+            Direction::NorthWest => write!(f, "{}", "NW")
+        }
     }
 }
 
@@ -90,6 +142,23 @@ impl Coord2 {
     pub fn manhattan( &self, rhs: &Coord2) -> i32 {
         (self.x - rhs.x).abs() + (self.y - rhs.y).abs()
     }
+
+    pub fn distance(&self, from: &Coord2) -> f32 {
+        let total = (self.x - from.x).pow(2) +
+            (self.y - from.y).pow(2);
+        (total as f32).sqrt()
+    }
+
+    pub fn angle_radian(&self) -> f32 {
+        (self.y as f32).atan2(self.x as f32)
+    }
+
+    pub fn from_polar(angle_radians: f32, dist: f32) -> Coord2 {
+        Coord2 {
+            x: (dist * angle_radians.cos()).round() as i32,
+            y: (dist * angle_radians.sin()).round() as i32
+        }
+    }
 }
 
 
@@ -104,10 +173,10 @@ impl ops::Add<&Coord2> for &Coord2 {
     }
 }
 
-impl ops::Sub<Coord2> for Coord2 {
+impl ops::Sub<&Coord2> for &Coord2 {
     type Output = Coord2;
 
-    fn sub(self, rhs: Coord2) -> Coord2 {
+    fn sub(self, rhs: &Coord2) -> Coord2 {
         Coord2 {
             x: self.x - rhs.x,
             y: self.y - rhs.y

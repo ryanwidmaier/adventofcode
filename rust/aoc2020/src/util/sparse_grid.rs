@@ -50,22 +50,22 @@ impl <T: Display> SparseGrid<T> {
     }
 
     pub fn neighbors4(&self, center: &Coord2) -> Vec<(Coord2, &T)> {
-        self.neighbors(center, center.neighbors4())
+        self.neighbors(center.neighbors4())
     }
 
     pub fn neighbors_values4(&self, center: &Coord2) -> Vec<&T> {
-        self.neighbors_values(center, center.neighbors4())
+        self.neighbors_values(center.neighbors4())
     }
 
     pub fn neighbors8(&self, center: &Coord2) -> Vec<(Coord2, &T)> {
-        self.neighbors(center, center.neighbors8())
+        self.neighbors(center.neighbors8())
     }
 
     pub fn neighbors_values8(&self, center: &Coord2) -> Vec<&T> {
-        self.neighbors_values(center, center.neighbors8())
+        self.neighbors_values(center.neighbors8())
     }
 
-    fn neighbors(&self, center: &Coord2, neighbors: Vec<Coord2>) -> Vec<(Coord2, &T)> {
+    fn neighbors(&self, neighbors: Vec<Coord2>) -> Vec<(Coord2, &T)> {
         let mut out_vec = vec![];
 
         for n in neighbors {
@@ -78,7 +78,7 @@ impl <T: Display> SparseGrid<T> {
         out_vec
     }
 
-    fn neighbors_values(&self, center: &Coord2, neighbors: Vec<Coord2>) -> Vec<&T> {
+    fn neighbors_values(&self, neighbors: Vec<Coord2>) -> Vec<&T> {
         let mut out_vec = vec![];
 
         for n in neighbors {

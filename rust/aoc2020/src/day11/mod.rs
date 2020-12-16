@@ -60,7 +60,7 @@ pub fn part1(lines: &Vec<String>) {
                 .filter(|v| **v == Cell::OccupiedSeat)
                 .count();
 
-            println!("Part1: Done after {} steps, occupied={}", t, occupied);
+            println!("Part1: Done, occupied={}",  occupied);
             break;
         }
 
