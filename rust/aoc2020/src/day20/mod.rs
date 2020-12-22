@@ -4,10 +4,10 @@
 //     v
 // }
 
-pub fn part1(lines: &Vec<String>) {
+pub fn part1(_lines: &Vec<String>) {
 
 }
 
-pub fn part2(lines: &Vec<String>) {
+pub fn part2(_lines: &Vec<String>) {
 
 }
