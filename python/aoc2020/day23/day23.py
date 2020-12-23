@@ -1,6 +1,5 @@
 from typing import Optional, Iterable
-from util import RateLogger, Timer
-import time
+from util import Timer
 
 
 class Node:
@@ -110,7 +109,7 @@ def play(cups, max_val, rounds) -> Node:
     # print('-- final --')
     # print(f'cups: (' + ' '.join(str(x) for x in cups.values()))
 
-    return cups
+    return nodes[1]
 
 
 def part1(data):
@@ -121,8 +120,7 @@ def part1(data):
     cups = play(cups, max_val, 10)
 
     # Rotate 1 to the front, then remove it
-    one = cups.rfind(1)
-    answer = list(one.values())[1:]
+    answer = list(cups.values())[1:]
     print(f'Part 1:', ''.join(str(x) for x in answer))
 
 
@@ -135,13 +133,12 @@ def part2(data):
     cups = play(cups, max_val, 10000000)
 
     # Part 2 - answer
-    one = cups.rfind(1)
-    # print_n(one.prev.prev.prev.prev.prev.prev.prev, 20)
+    # print_n(cups.prev.prev.prev.prev.prev.prev.prev, 20)
     # print_n(cups.rfind(934001), 10)
     # print_n(cups.rfind(159792), 10)
 
-    plus1 = one.next.value
-    plus2 = one.next.next.value
+    plus1 = cups.next.value
+    plus2 = cups.next.next.value
     print(f'Part 2: {plus1} x {plus2} = {plus1*plus2}')
 
 
