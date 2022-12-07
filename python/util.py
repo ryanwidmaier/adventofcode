@@ -3,6 +3,7 @@ import logging
 from queue import PriorityQueue
 import math
 from collections import defaultdict, namedtuple
+from pathlib import Path
 import string
 
 logger = logging.getLogger(__name__)
@@ -295,6 +296,20 @@ class Timer:
         return (datetime.now() - self.start).total_seconds()
 
 
+def read_input(p: Path, tx=None):
+    def noop(x):
+        return x
+
+    lines = []
+    tx = tx or noop
+    with p.open() as f:
+        for line in f:
+            line = line.strip()
+            lines.append(tx(line))
+
+    return lines
+
+
 def cartesian_distance(pos, goal):
     return math.sqrt(sum([(a - b) ** 2 for a, b in zip(pos, goal)]))
 
@@ -490,6 +505,7 @@ class Assembler(object):
 
     def jump(self, amount):
         self.index += self.read_register(amount) - 1  # -1 b/c we always do + 1 after each instruction
+
 
 class Memoize:
     def __init__(self, fn):
