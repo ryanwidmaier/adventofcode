@@ -1,8 +1,8 @@
 package main
 
 import (
-	"aoc2020/util/io"
 	"fmt"
+	"github.com/ryanwidmaier/adventofcode/golang/util/io"
 	"regexp"
 	"strconv"
 	"strings"

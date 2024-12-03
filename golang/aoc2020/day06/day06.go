@@ -1,10 +1,7 @@
 package main
 
 import (
-"aoc2020/util/coord"
-"aoc2020/util/io"
-"aoc2020/util/robot"
-"fmt"
+	"github.com/ryanwidmaier/adventofcode/golang/util/io"
 )
 
 func main() {
@@ -17,6 +14,6 @@ func main() {
 
 func part1(lines []string) {
 	for _, line := range lines {
-		
+
 	}
 }

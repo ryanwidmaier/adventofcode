@@ -13,6 +13,11 @@ func ReadLinesArg1() []string {
 	return ReadLines(os.Args[1])
 }
 
+/** Read file from first cli arg and return lines */
+func ReadLineTokensArg1() []string {
+	return ReadLines(os.Args[1])
+}
+
 /** Return all the lines from a file */
 func ReadLines(filename string) []string {
 	f, err := os.Open(filename)
@@ -33,6 +38,28 @@ func ReadLines(filename string) []string {
 	}
 
 	return lines
+}
+
+/** Return an array of lines, with each line being an array of string tokens */
+func ReadLineTokens(filename string) [][]string {
+
+	lines := ReadLines(filename)
+	result := make([][]string, 0)
+	for _, line := range lines {
+		rawTokens := strings.Split(line, ` `)
+		tokens := make([]string, 0)
+
+		for _, rv := range rawTokens {
+			value := strings.TrimSpace(rv)
+			if len(value) > 0 {
+				tokens = append(tokens, value)
+			}
+		}
+
+		result = append(result, tokens)
+	}
+
+	return result
 }
 
 func ReadLinesRegexp(filename string, pattern string) [][]string {

@@ -1,6 +1,5 @@
 package set
 
-
 type StringSet = map[string]struct{}
 
 func (lhs StringSet) Add(val string) {

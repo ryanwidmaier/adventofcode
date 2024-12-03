@@ -1,10 +1,10 @@
 package main
 
 import (
-	"aoc2020/util/coord"
-	"aoc2020/util/io"
-	"aoc2020/util/robot"
 	"fmt"
+	"github.com/ryanwidmaier/adventofcode/golang/util/coord"
+	"github.com/ryanwidmaier/adventofcode/golang/util/io"
+	"github.com/ryanwidmaier/adventofcode/golang/util/robot"
 )
 
 func main() {
