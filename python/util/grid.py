@@ -1,15 +1,9 @@
-from datetime import datetime, timedelta
-import logging
-from queue import PriorityQueue
 import math
-from collections import defaultdict, namedtuple
-from pathlib import Path
-import string
-
-logger = logging.getLogger(__name__)
+from queue import PriorityQueue
+from util.timing import Timer
 
 
-class Coord(object):
+class Coord:
     def __init__(self, x=0, y=0, z=0):
         if isinstance(x, str):
             x = int(x)
@@ -128,7 +122,7 @@ class Coord(object):
         return Coord(min_x, min_y), Coord(max_x, max_y)
 
 
-class CoordMat(object):
+class CoordMat:
     def __init__(self, r=0, c=0):
         self.r = r
         self.c = c
@@ -163,7 +157,7 @@ class CoordMat(object):
         return hash(tuple(sorted(self.__dict__.items())))
 
 
-class GridWalker(object):
+class GridWalker:
     """ Grid coordinate that can move in cardinal directions. """
     def __init__(self, start, track_path=False):
         self.position = start.copy()
@@ -207,8 +201,10 @@ class GridWalker(object):
         return 'GridWalker({})'.format(repr(self.position))
 
 
-class GridCar(object):
-    """ Grid coordinate with associated facing direction that can move forward/backward and turn. """
+class GridCar:
+    """
+    Grid coordinate with associated facing direction that can move forward/backward and turn.
+    """
     dirs = ['north', 'east', 'south', 'west']
 
     def __init__(self, start, facing, invert_y=False):
@@ -269,45 +265,6 @@ class GridCar(object):
 
     def turn_to(self, direction):
         self.facing = direction.lower()
-
-
-class Timer:
-    """ Utility class for measuring elapsed time """
-
-    def __init__(self):
-        self.start = datetime.now()
-
-    def reset(self):
-        """ Reset the timer back to 0.0 elapsed """
-        self.start = datetime.now()
-
-    def elapsed(self):
-        """
-        Elapsed time since object construction or last reset call
-        :return: A timedelta object repesenting the elapsed time
-        """
-        return datetime.now() - self.start
-
-    def elapsed_secs(self):
-        """
-        Return how many seconds have elapsed
-        :return: A float of elapsed seconds
-        """
-        return (datetime.now() - self.start).total_seconds()
-
-
-def read_input(p: Path, tx=None):
-    def noop(x):
-        return x
-
-    lines = []
-    tx = tx or noop
-    with p.open() as f:
-        for line in f:
-            line = line.strip()
-            lines.append(tx(line))
-
-    return lines
 
 
 def cartesian_distance(pos, goal):
@@ -456,117 +413,6 @@ def all_shortest_paths(start, possible_moves):
     return shortest.values()
 
 
-AsmCommand = namedtuple('AsmCommand', 'cmd reg value')
-
-
-class Assembler(object):
-    """
-    Framework for implementing assembly command simulation.  Override execute command to handle the different
-    commands.
-    """
-
-    def __init__(self):
-        self.registers = defaultdict(lambda: 0)
-        self.commands = []
-        self.index = 0
-        self.instructions_run = 0
-
-    def parse(self, filename):
-        fin = open(filename)
-        for line in fin:
-            line = line.rstrip()
-
-            tokens = line.split()
-
-            cmd = tokens[0]
-            reg = tokens[1] if len(tokens) > 1 else None
-            val = tokens[2] if len(tokens) > 2 else None
-
-            self.commands.append(AsmCommand(cmd, reg, val))
-
-    def read_register(self, register):
-        """ Return the value of a register, or the value if it is a literal """
-        if register in string.ascii_letters:
-            return self.registers[register]
-
-        return int(register)
-
-    def run(self):
-        """ Run the simulation """
-        while 0 <= self.index < len(self.commands):
-            command = self.commands[self.index]
-
-            self.execute(command.cmd, command.reg, command.value)
-            self.index += 1
-            self.instructions_run += 1
-
-    def execute(self, command, register, value):
-        pass
-
-    def jump(self, amount):
-        self.index += self.read_register(amount) - 1  # -1 b/c we always do + 1 after each instruction
-
-
-class Memoize:
-    def __init__(self, fn):
-        self.fn = fn
-        self.memo = {}
-
-    def __call__(self, *args):
-        if args not in self.memo:
-            self.memo[args] = self.fn(*args)
-        return self.memo[args]
-
-
-def argmax(seq, key=None):
-    """
-    Return the index of the max element on a list, or the key w/ the max value on a dict.  key can take a lambda
-    that will be given the value and can return a derived key
-     """
-    if isinstance(seq, dict):
-        seq = seq.items()
-    else:
-        seq = enumerate(seq)
-
-    m = max(seq, key=lambda x: key(x[1]) if key else x[1])
-    return m[0]
-
-
-def argmin(seq, key=None):
-    """
-    Return the index of the max element on a list, or the key w/ the max value on a dict.  key can take a lambda
-    that will be given the value and can return a derived key
-     """
-    if isinstance(seq, dict):
-        seq = seq.items()
-    else:
-        seq = enumerate(seq)
-
-    m = min(seq, key=lambda x: key(x[1]) if key else x[1])
-    return m[0]
-
-
-def minmax(seq, key=None):
-    key = key if key else lambda v: v
-
-    min_v = None
-    min_k = None
-    max_v = None
-    max_k = None
-
-    for v in seq:
-        k = key(v)
-        if min_k is None or k < min_k:
-            min_v = v
-            min_k = k
-
-        if max_k is None or k > max_k:
-            max_v = v
-            max_k = k
-
-    return (min_v, max_v)
-
-
 def point_in_triangle(point, tri, boundary_counts=False):
     """ return true if a point is inside a triangle """
     def sign(p1, p2, p3):
@@ -586,50 +432,6 @@ def point_in_triangle(point, tri, boundary_counts=False):
     return not (has_neg and has_pos)
 
 
-class RateLogger(object):
-    """
-    Helper class for printing status when processing lots of records. You can use this class to keep track of
-    how many records you have processed and print every N records so you can get a rough feel of how far the process
-    is and how fast it is going.
-    """
-    def __init__(self, log_every_n=1000, log_fn=None):
-        self.total = 0
-        self.diff = 0
-        self.log_every_n = log_every_n
-        self.timer = Timer()
-
-        self.log_fn = log_fn
-        if not self.log_fn:
-            self.log_fn = lambda r: "Processing {} records took {}s.  Total={}".format(r.log_every_n,
-                                                                                       r.timer.elapsed_secs(),
-                                                                                       r.total)
-
-    def inc(self, n=1):
-        self.diff += n
-
-        # start total used to store the original total so we can have it at the correct values both at the end of this
-        # fn and in the loop.
-        start_total = self.total
-        self.total = int(self.total / self.log_every_n) * self.log_every_n
-
-        while self.diff >= self.log_every_n:
-            self.diff -= self.log_every_n
-
-            # Incrementing total here so available for log with correct value. Needs to be done here in case
-            # n is greater than the log_every_n size.
-            self.total += self.log_every_n
-            print(self.log_fn(self))
-
-            # Reset the timer for the next block
-            self.timer.reset()
-
-        # Set total to the correct final total which may not line up with the block size
-        self.total = start_total + n
-
-    def total_time(self):
-        return self.timer.elapsed()
-
-
 def grid_walk(grid):
     for y, row in enumerate(grid):
         for x, d in enumerate(row):
@@ -640,7 +442,6 @@ def print_dict_grid(grid, y_up=False):
     if len(grid) == 0:
         print()
         return
-
 
     min_x = min(h.x for h in grid)
     min_y = min(h.y for h in grid)

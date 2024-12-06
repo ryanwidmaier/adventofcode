@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/ryanwidmaier/adventofcode/golang/util/coord"
 	"github.com/ryanwidmaier/adventofcode/golang/util/io"
 	"github.com/ryanwidmaier/adventofcode/golang/util/robot"
 )

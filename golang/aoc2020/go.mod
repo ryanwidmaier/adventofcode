@@ -1,6 +1,6 @@
 module github.com/ryanwidmaier/adventofcode/golang/aoc2020
 
-go 1.19
+go 1.23
 
 replace github.com/ryanwidmaier/adventofcode/golang/util => ../util
 
